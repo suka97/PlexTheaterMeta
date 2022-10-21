@@ -34,8 +34,8 @@ def download_file(url, dest):
 def initWebdriver(webdriver_path, user_data_dir):
     options = Options()
     if user_data_dir != None: options.add_argument("user-data-dir="+user_data_dir) 
-    options.headless = True
-    options.add_argument("--window-size=1920,1200")
+    # options.headless = True
+    # options.add_argument("--window-size=1920,1200")
     driver = webdriver.Chrome(options=options, executable_path=webdriver_path, service_log_path='NUL')
     return driver
 
@@ -43,7 +43,7 @@ def initWebdriver(webdriver_path, user_data_dir):
 def getTeatrixMeta(driver, url):
     driver.get(url)
     try:
-        desc_element = WebDriverWait(driver, 5).until(
+        desc_element = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.TAG_NAME, "app-play-detail-page-description"))
         )
     finally:
@@ -64,13 +64,21 @@ def getTeatrixMeta(driver, url):
             actors.append(e.text)
         # writer
         writer = driver.find_element(By.XPATH, TEATRIX_XPATH_WRITER).text
-        # director
-        director = driver.find_element(By.XPATH, TEATRIX_XPATH_DIRECTOR).text
+        # director (hay veces que no esta)
+        director = ''
+        try:
+            director = driver.find_element(By.XPATH, TEATRIX_XPATH_DIRECTOR).text
+        except:
+            pass
         # genre
-        genres_str = driver.find_element(By.XPATH, TEATRIX_XPATH_GENRES).text
-        genres = genres_str.split(',')
-        for i in range(len(genres)): genres[i] = genres[i].lstrip()
-        genres.remove('')
+        genres = []
+        try:
+            genres_str = driver.find_element(By.XPATH, TEATRIX_XPATH_GENRES).text
+            genres = genres_str.split(',')
+            for i in range(len(genres)): genres[i] = genres[i].lstrip()
+            genres.remove('')
+        except:
+            pass
 
         return {
             'desc': desc,
@@ -196,16 +204,16 @@ parser.add_argument('--dest_dir', dest='dest_dir', help='destination directory',
 parser.add_argument('--skip_video', dest='skip_video', help='Skip video files', action='store_true')
 args = parser.parse_args()
 
-# magick
-try:
-    execute('magick')
-except Exception as e:
-    print('magick needed'); exit()
-# ffmpeg
-try:
-    execute('ffmpeg')
-except Exception as e:
-    print('ffmpeg needed'); exit()
+# # magick
+# try:
+#     execute('magick')
+# except Exception as e:
+#     print('magick needed'); exit()
+# # ffmpeg
+# try:
+#     execute('ffmpeg')
+# except Exception as e:
+#     print('ffmpeg needed'); exit()
 # url / url_file
 if (args.url == None) and (args.url_file == None): 
     print('URL or URL_File needed'); exit()
